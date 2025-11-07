@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Insultron Inclusif — Générateur d'expressions inoffensives</title>
+
+<!-- Police Lexend (facultative si bloquée) -->
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --panel-bg: rgba(255,255,255,0.94);
+  --panel-border: rgba(0,0,0,0.12);
+  --accent: #1e3a8a;
+  --text: #111;
+}
+html,body{height:100%;margin:0;font-family:'Lexend',Arial,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+
+/* Fond : drapeau des fiertés handicapées (bandes diagonales) */
+body{
+  background: linear-gradient(135deg, 
+    #4a4a4a 0%, #4a4a4a 14.28%,
+    #22c55e 14.28%, #22c55e 28.56%,
+    #3b82f6 28.56%, #3b82f6 42.84%,
+    #ffffff 42.84%, #ffffff 57.12%,
+    #fbbf24 57.12%, #fbbf24 71.4%,
+    #dc2626 71.4%, #dc2626 85.68%,
+    #4a4a4a 85.68%, #4a4a4a 100%);
+  background-attachment: fixed;
+  background-size: cover;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:2rem 1rem;
+}
+
+/* Conteneur principal */
+.container{
+  width:100%;
+  max-width:980px;
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.18);
+  padding:1.25rem;
+  box-sizing:border-box;
+}
+
+/* En-tête */
+.header{display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.title{font-size:1.25rem;font-weight:600;margin:0;}
+.subtitle{font-size:0.95rem;margin:0;color:#333;}
+
+/* Contrôles */
+.controls{display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:1rem;align-items:center;}
+.select,.button{font-size:1rem;padding:0.6rem 0.9rem;border-radius:8px;border:1px solid #cfcfcf;background:#fff;cursor:pointer;}
+.select:focus,.button:focus{outline:3px solid #2563eb;outline-offset:3px;}
+.select{min-width:220px;}
+
+/* Ligne génération */
+.generate-row{display:flex;gap:0.75rem;align-items:center;margin-top:1rem;}
+.btn-primary{background:#1e3a8a;color:#fff;border:none;padding:0.85rem 1.05rem;border-radius:10px;font-weight:600;cursor:pointer;}
+.btn-secondary{background:#f3f4f6;border:1px solid #d1d5db;padding:0.65rem 0.85rem;border-radius:8px;cursor:pointer;}
+.btn-primary:focus,.btn-secondary:focus{outline:3px solid #2563eb;outline-offset:3px;}
+
+/* Résultat */
+.result{margin-top:1.25rem;padding:1rem;background:#fff;border-radius:10px;border:1px solid #e6e6e6;min-height:84px;display:flex;flex-direction:column;gap:0.5rem;}
+.result .insult{font-size:1.6rem;font-weight:700;color:#111;word-break:break-word;}
+.result .explain{font-size:0.95rem;color:#333;}
+
+/* Contrôles sous résultat */
+.result-controls{display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;}
+
+/* Pied de page */
+.footer{margin-top:1rem;font-size:0.85rem;color:#333;display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+.signature{opacity:0.9;}
+
+/* Responsive */
+@media (max-width:640px){
+  .controls{flex-direction:column;align-items:stretch;}
+  .generate-row{flex-direction:column;align-items:stretch;}
+  .select{width:100%;}
+  .btn-primary{width:100%;}
+}
+
+/* Live region and visually hidden helper */
+[aria-live]{outline:none;}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+</style>
+</head>
+<body>
+  <main class="container" role="main" aria-labelledby="main-title">
+    <header class="header">
+      <div>
+        <h1 id="main-title" class="title">Insultron Inclusif</h1>
+        <p class="subtitle">Générateur d'expressions inoffensives pour critiquer des comportements, pas des personnes.</p>
+      </div>
+      <div aria-hidden="true" style="text-align:right;">
+        <!-- simple decorative flag graphic (not read by screen readers) -->
+        <svg width="120" height="48" viewBox="0 0 120 48" aria-hidden="true" focusable="false">
+          <rect width="120" height="48" fill="#4a4a4a"></rect>
+          <rect y="6.86" width="120" height="6.86" fill="#22c55e"></rect>
+          <rect y="13.72" width="120" height="6.86" fill="#3b82f6"></rect>
+          <rect y="20.58" width="120" height="6.86" fill="#ffffff"></rect>
+          <rect y="27.44" width="120" height="6.86" fill="#fbbf24"></rect>
+          <rect y="34.3" width="120" height="6.86" fill="#dc2626"></rect>
+          <rect y="41.16" width="120" height="6.84" fill="#4a4a4a"></rect>
+        </svg>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Contrôles du générateur">
+      <label for="category" class="sr-only">Choisir une catégorie</label>
+      <select id="category" class="select" aria-label="Choisir une catégorie">
+        <option value="all">Toutes les catégories</option>
+        <option value="savantes">Savantes (racines)</option>
+        <option value="objets">Objets</option>
+        <option value="aliments">Aliments</option>
+        <option value="anciens">Vieux mots</option>
+        <option value="sonores">Sonores et valises</option>
+        <option value="jurons">Jurons anciens</option>
+      </select>
+
+      <label for="mode" class="sr-only">Mode</label>
+      <select id="mode" class="select" aria-label="Mode de génération">
+        <option value="combo">Combinaison (nom + adjectif)</option>
+        <option value="template">Template savant (racine+suffixe)</option>
+        <option value="single">Mot simple</option>
+      </select>
+
+      <div style="margin-left:auto;display:flex;gap:0.5rem;">
+        <button id="voice-toggle" class="btn-secondary" aria-pressed="false" aria-label="Activer ou désactiver la lecture vocale">Lecture vocale : désactivée</button>
+        <button id="copy-btn" class="btn-secondary" aria-label="Copier l'expression dans le presse-papiers">Copier</button>
+      </div>
+    </section>
+
+    <div class="generate-row">
+      <button id="generate" class="btn-primary" aria-label="Générer une expression (raccourci Ctrl + Alt + G)">Générer</button>
+      <button id="randomize" class="btn-secondary" aria-label="Générer complètement aléatoire">Aléatoire</button>
+    </div>
+
+    <div class="result" aria-live="polite" aria-atomic="true" id="result-region">
+      <div class="insult" id="insult" aria-label="Expression générée">Appuyez sur Générer pour créer une expression.</div>
+      <div class="explain" id="explain" aria-label="Explication">L'outil propose des expressions non oppressives. Vérifiez la checklist éthique avant publication.</div>
+
+      <div class="result-controls">
+        <button id="save-btn" class="btn-secondary" aria-label="Sauvegarder cette expression localement">Sauvegarder</button>
+        <button id="share-btn" class="btn-secondary" aria-label="Partager via un lien local">Partager (copie locale)</button>
+      </div>
+    </div>
+
+    <footer class="footer" role="contentinfo">
+      <div class="signature">Insultron Inclusif — Projet FranceInclusive — Auteur : TiRacoon — Licence CC BY-NC-SA 4.0</div>
+      <div style="font-size:0.85rem;color:#444">Raccourci : Ctrl + Alt + G pour générer</div>
+    </footer>
+  </main>
+
+<script>
+/* Insultron Inclusif — version autonome
+   Tout le contenu lexical intégré dans DICT.
+   Aucun emoji dans le texte affiché. */
+
+/* ---------- Corpus lexical (nettoyé et large) ---------- */
+const DICT = {
+  "savantes": {
+    "roots": [
+      "logos","praxis","doxa","manie","kratos","phobos",
+      "philos","ludus","motus","otium","fumus","nimbus",
+      "aqua","ignis","ventus","silva","humus","petra",
+      "flos","verba","fictus","mendax","tempus","vagus",
+      "lentus","hilaris","gravis"
+    ],
+    "prefixes": ["auto","pseudo","mal","archi","micro","mega","para","anti","ultra"],
+    "suffixes": ["cule","ard","ique","iste","phore","crate","on","eau","ier","eux","ounet"]
+  },
+
+  "objets": [
+    "balai","plumeau","torchon","casserole","poele","epong e","brosse","seau",
+    "fer a repasser","cafetière","passoire","entonnoir","louche","tabouret",
+    "lampe","cuillere","râteau","bêche","faucille","houe","brouette","auge",
+    "sabot","joug","palanche","baluchon","marmite","chaudron","trombone",
+    "clé USB","chargeur","télécommande","post-it","vis","boulon","tournevis",
+    "clavier","ventilo","bouteille","bouilloire","lanterne","presse-purée","seau"
+  ],
+
+  "aliments": [
+    "andouille","boudin","cornichon","nouille","patate","navet","courge","poireau",
+    "radis","chou","haricot","lentille","oignon","ail","poire","prune","mirabelle",
+    "flan","biscuit","meringue","gaufre","beignet","gnocchi","raviolo","couscous",
+    "mochi","falafel","brioche","quenelle","boulette","croquette","tapioca",
+    "rutabaga","topinambour","biscotte","croûton","compote","omelette","galette",
+    "pierogi","empanada","briochette","panisse","bugne"
+  ],
+
+  "anciens": [
+    "paltoquet","faquin","ganache","maroufle","butor","pignouf","gougnafier",
+    "bélître","freluquet","fripon","foutriquet","galapiat","jobard","malotru",
+    "goujat","mufle","cuistre","forban"
+  ],
+
+  "sonores": {
+    "bases": ["glouglou","tartignole","chafouin","tremble","barbouille","glapir","clapoc","glouglout","tortill"],
+    "suffixes": ["ard","ardeur","ule","ulent","ot","ette","ier","ouille","ounet","inou"]
+  },
+
+  "jurons": [
+    "sacrebleu","morbleu","fichtre","diantre","saperlipopette","mazette","tudieu","parbleu","fichtre-donc"
+  ],
+
+  "adjectifs": [
+    "pompeux","brouillon","rouspeyeur","flasque","tatillon","faiblard","vaniteux",
+    "ronchon","cabotin","prétentieux","lunatique","geignard","filandreux","maladroit",
+    "empoté","amphigourique","vaporeux","ombrageux","crépusculaire","nébuleux",
+    "fantasque","biscornu","baroque","chafouin","patraque","raplapla","zinzin",
+    "mollasson","bidon","roublard","tarabiscoté","chafouillard","pimpant","ridiculon"
+  ]
+};
+
+/* ---------- Utilitaires ---------- */
+function rand(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function safeJoin(parts, sep=" "){ return parts.filter(Boolean).join(sep).replace(/\s+/g,' ').trim(); }
+function tidy(s){ return s.replace(/\s+/g,' ').replace(/\- /g,'-').trim(); }
+
+/* ---------- Filtrage éthique (mots protégés / sensibles) ---------- */
+const PROTECTED_KEYWORDS = [
+  "handicap","handicapé","handicapée","malade","maladie","infirme",
+  "gros","grosse","maigre","vieux","vieille","noir","blanc","arabe",
+  "juif","musulman","homosexuel","gay","lesbienne","trans","travesti",
+  "sourd","aveugle","autiste","retard","cripple"
+];
+
+function isSafeExpression(expr){
+  const low = expr.toLowerCase();
+  for(const p of PROTECTED_KEYWORDS){
+    if(low.includes(p)) return false;
+  }
+  return true;
+}
+
+/* ---------- Générateurs ---------- */
+function genSavante(){
+  const r = rand(DICT.savantes.roots);
+  const p = Math.random() < 0.45 ? rand(DICT.savantes.prefixes) : "";
+  const s = rand(DICT.savantes.suffixes);
+  const core = tidy((p ? p + r : r) + s);
+  return core;
+}
+
+function genObjetAliment(cat){
+  const source = cat === 'objets' ? DICT.objets : DICT.aliments;
+  const nom = rand(source);
+  const adj = Math.random() < 0.6 ? rand(DICT.adjectifs) : "";
+  return tidy(nom + (adj ? " " + adj : ""));
+}
+
+function genAncien(){
+  const w = rand(DICT.anciens);
+  return Math.random() < 0.5 ? w : tidy(w + " " + rand(DICT.adjectifs));
+}
+
+function genSonore(){
+  const b = rand(DICT.sonores.bases);
+  const suf = rand(DICT.sonores.suffixes);
+  const adj = Math.random() < 0.35 ? " " + rand(DICT.adjectifs) : "";
+  return tidy(b + suf + adj);
+}
+
+function genJuron(){
+  return rand(DICT.jurons) + (Math.random()<0.25 ? " " + rand(DICT.adjectifs) : "");
+}
+
+/* ---------- Logique principale ---------- */
+function generateExpression(opts = {}){
+  const category = opts.category || 'all';
+  const mode = opts.mode || 'combo';
+
+  let attempt = 0;
+  while(attempt < 8){
+    attempt++;
+    let expr = "";
+
+    if(mode === 'single'){
+      const cats = category === 'all' ? ['savantes','objets','aliments','anciens','sonores','jurons'] : [category];
+      const pick = rand(cats);
+      if(pick === 'savantes') expr = genSavante();
+      if(pick === 'objets') expr = genObjetAliment('objets');
+      if(pick === 'aliments') expr = genObjetAliment('aliments');
+      if(pick === 'anciens') expr = genAncien();
+      if(pick === 'sonores') expr = genSonore();
+      if(pick === 'jurons') expr = genJuron();
+    } else if(mode === 'template'){
+      expr = genSavante();
+      if(Math.random() < 0.6) expr += " " + rand(DICT.adjectifs);
+    } else { // combo
+      const p = Math.random();
+      if(p < 0.28) expr = genObjetAliment(Math.random()<0.5?'objets':'aliments');
+      else if(p < 0.56) expr = genSavante() + (Math.random()<0.6 ? " " + rand(DICT.adjectifs) : "");
+      else if(p < 0.78) expr = genAncien();
+      else expr = genSonore();
+    }
+
+    expr = tidy(expr);
+    if(isSafeExpression(expr)) return expr;
+  }
+  return "expression inoffensive";
+}
+
+/* ---------- Explication courte ---------- */
+function explainExpression(){
+  return "Expression ludique destinée à critiquer un comportement : usage créatif et non oppressif. Ne vise pas l'identité d'une personne.";
+}
+
+/* ---------- DOM bindings ---------- */
+const categoryEl = document.getElementById('category');
+const modeEl = document.getElementById('mode');
+const generateBtn = document.getElementById('generate');
+const randomBtn = document.getElementById('randomize');
+const insultEl = document.getElementById('insult');
+const explainEl = document.getElementById('explain');
+const copyBtn = document.getElementById('copy-btn');
+const voiceToggle = document.getElementById('voice-toggle');
+const saveBtn = document.getElementById('save-btn');
+const shareBtn = document.getElementById('share-btn');
+
+let voiceEnabled = false;
+voiceToggle.addEventListener('click', () => {
+  voiceEnabled = !voiceEnabled;
+  voiceToggle.setAttribute('aria-pressed', String(voiceEnabled));
+  voiceToggle.textContent = voiceEnabled ? "Lecture vocale : activée" : "Lecture vocale : désactivée";
+});
+
+/* Generate action */
+function doGenerate(opts){
+  const expr = generateExpression(opts);
+  insultEl.textContent = expr;
+  explainEl.textContent = explainExpression();
+  insultEl.focus();
+  window.__lastInsult = expr;
+
+  if(voiceEnabled && 'speechSynthesis' in window){
+    const utter = new SpeechSynthesisUtterance(expr + ". " + explainExpression());
+    utter.lang = 'fr-FR';
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+/* Events */
+generateBtn.addEventListener('click', ()=>doGenerate({category:categoryEl.value, mode:modeEl.value}));
+randomBtn.addEventListener('click', ()=>{
+  const cats = ['savantes','objets','aliments','anciens','sonores','jurons'];
+  const modes = ['combo','template','single'];
+  doGenerate({category:rand(cats), mode:rand(modes)});
+});
+
+/* Shortcut Ctrl + Alt + G */
+document.addEventListener('keydown', (e) => {
+  if(e.ctrlKey && e.altKey && e.key.toLowerCase() === 'g'){
+    generateBtn.click();
+  }
+});
+
+/* Copy */
+copyBtn.addEventListener('click', async () => {
+  const text = window.__lastInsult || insultEl.textContent;
+  try{
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = "Copié";
+    setTimeout(()=>copyBtn.textContent = "Copier",800);
+  }catch(e){
+    copyBtn.textContent = "Impossible";
+    setTimeout(()=>copyBtn.textContent = "Copier",1200);
+  }
+});
+
+/* Save */
+saveBtn.addEventListener('click', () => {
+  const txt = window.__lastInsult || insultEl.textContent;
+  if(!txt) return;
+  const list = JSON.parse(localStorage.getItem('insultron-saved') || '[]');
+  list.unshift({text:txt, date: new Date().toISOString()});
+  localStorage.setItem('insultron-saved', JSON.stringify(list.slice(0,200)));
+  saveBtn.textContent = "Sauvegardé";
+  setTimeout(()=>saveBtn.textContent = "Sauvegarder",900);
+});
+
+/* Share: blob URL copied to clipboard */
+shareBtn.addEventListener('click', async () => {
+  const txt = window.__lastInsult || insultEl.textContent;
+  if(!txt) return;
+  const payload = {text:txt, explain:explainExpression()};
+  const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  try{
+    await navigator.clipboard.writeText(url);
+    shareBtn.textContent = "Lien copié";
+    setTimeout(()=>shareBtn.textContent = "Partager (copie locale)",1200);
+  }catch(e){
+    shareBtn.textContent = "Erreur copie";
+    setTimeout(()=>shareBtn.textContent = "Partager (copie locale)",1200);
+  }
+});
+
+/* Initial labels and focus */
+voiceToggle.textContent = "Lecture vocale : désactivée";
+copyBtn.textContent = "Copier";
+saveBtn.textContent = "Sauvegarder";
+shareBtn.textContent = "Partager (copie locale)";
+generateBtn.focus();
+
+/* Expose safety check for dev usage */
+window.isSafeExpression = isSafeExpression;
+
+console.log("Insultron Inclusif initialisé — Projet France Inclusive — Auteur : TiRacoon — Licence CC BY-NC-SA 4.0");
+</script>
+</body>
+</html>
